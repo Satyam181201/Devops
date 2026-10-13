@@ -45,8 +45,9 @@ docker run -dit `
                  
 ```
 
-Then run : docker exec -it ce850ea5543753c5497e109678f2e8991203718c1389b00d4a733f5950ea07fb /bin/bash
+Then run : docker exec -it 29d3d0f5b32415d6d82273567c4d2bd8439ba55f7243c3f1344f759bbd8694f4 /bin/bash
 
+to get container id : docker ps
 wsl -d Ubuntu
 
 sudo apt update
