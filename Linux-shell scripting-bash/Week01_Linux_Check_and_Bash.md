@@ -173,6 +173,16 @@ fi
 - String comparisons: `=` equal, `!=` not equal, `-z` empty, `-n` not empty.
 - `then ... fi` wraps the body. `fi` is `if` backwards - it closes the block.
 
+### Numeric Comparison Operators (complete list)
+- `-eq` → equal to (==)
+- `-ne` → not equal to (!=)
+- `-gt` → greater than (>)
+- `-lt` → less than (<)
+- `-ge` → greater than or equal to (>=)
+- `-le` → less than or equal to (<=)
+
+**Memory trick:** Think of the letters - **eq**ual, **n**ot **e**qual, **g**reater **t**han, **l**ess **t**han, **g**reater or **e**qual, **l**ess or **e**qual.
+
 Check if a file exists:
 ```bash
 if [ -f "/etc/hosts" ]; then echo "file exists"; fi
@@ -206,6 +216,41 @@ done
 - `while [ cond ]; do ... done` repeats while the condition is true.
 - `$((count + 1))` is **arithmetic** - the only place Bash does math easily.
 
+### Taking User Input Inside Loops
+You can use `read` inside loops to get input on each iteration:
+
+```bash
+#!/bin/bash
+
+# Example 1: Loop until user says "quit"
+while true; do
+    read -p "Enter a name (or 'quit' to exit): " name
+    if [ "$name" = "quit" ]; then
+        break
+    fi
+    echo "Hello, $name!"
+done
+
+# Example 2: Loop a fixed number of times, getting input each time
+for i in {1..3}; do
+    read -p "Enter server $i name: " server
+    echo "You entered: $server"
+done
+
+# Example 3: Loop and ask multiple questions per iteration
+count=1
+while [ $count -le 3 ]; do
+    read -p "Enter username $count: " username
+    read -p "Enter email for $username: " email
+    echo "User $count: $username ($email)"
+    count=$((count + 1))
+done
+```
+**Key points:**
+- `read -p "prompt text: " variable` displays a prompt and stores input in the variable.
+- `while true; do ... done` creates an infinite loop; use `break` to exit.
+- You can ask multiple questions per loop iteration.
+
 ## B.5 Functions
 ```bash
 #!/bin/bash
@@ -219,6 +264,90 @@ greet "World"             # prints: Hello, World
 - `name() { ... }` defines a function.
 - Inside, `$1`, `$2`, ... are the arguments passed when you call it.
 - Call it just by writing its name followed by arguments.
+
+### Passing Multiple Arguments to Functions
+Functions can accept **any number** of arguments. Access them with `$1`, `$2`, `$3`, etc., or use `$@` for all:
+
+```bash
+#!/bin/bash
+
+# Example 1: Function with 3+ arguments
+create_user() {
+    username=$1
+    email=$2
+    role=$3
+    department=$4
+    echo "Creating user:"
+    echo "  Name: $username"
+    echo "  Email: $email"
+    echo "  Role: $role"
+    echo "  Department: $department"
+}
+
+# Call with 4 arguments
+create_user "Satyam" "satyam@example.com" "DevOps" "Engineering"
+
+# Example 2: Function that accepts any number of arguments
+greet_all() {
+    echo "Greeting everyone:"
+    for name in "$@"; do
+        echo "  Hello, $name!"
+    done
+}
+
+# Call with different numbers of arguments
+greet_all "Alice" "Bob" "Charlie"
+greet_all "Dave" "Eve"
+
+# Example 3: Using special argument variables
+count_args() {
+    echo "You passed $# arguments"
+    echo "First: $1"
+    echo "Second: $2"
+    echo "All: $@"
+}
+
+count_args "arg1" "arg2" "arg3" "arg4" "arg5"
+```
+
+**Special Variables for Arguments:**
+- `$1, $2, $3, ...` → individual arguments (1st, 2nd, 3rd, ...)
+- `$@` → all arguments as separate words (use in loops)
+- `$#` → total number of arguments
+- `$0` → the script name itself
+
+### Real-World Example: Combining Loops and Functions with Input
+```bash
+#!/bin/bash
+
+# Function that creates a server configuration
+create_config() {
+    server_name=$1
+    ip=$2
+    port=$3
+    env=$4
+    
+    echo "[$server_name]"
+    echo "ip=$ip"
+    echo "port=$port"
+    echo "environment=$env"
+    echo "---"
+}
+
+# Loop to get multiple server configurations from user
+read -p "How many servers to configure? " count
+
+for i in $(seq 1 $count); do
+    echo "Server $i:"
+    read -p "  Name: " name
+    read -p "  IP: " ip
+    read -p "  Port: " port
+    read -p "  Environment (dev/prod): " env
+    
+    # Pass all 4 arguments to function
+    create_config "$name" "$ip" "$port" "$env"
+done
+```
 
 ## B.6 Common mistakes
 - **Spaces around `=`**: `x = 5` is wrong, use `x=5`.
