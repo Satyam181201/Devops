@@ -73,7 +73,7 @@
 - [ ] Bash scripting basics (variables, loops, conditions, functions)
 - [ ] Command-line arguments, exit codes
 - [ ] Cron jobs (scheduling)
-- [ ] Networking: IP addresses, DNS, ports, TCP/UDP
+- [D] Networking: IP addresses, DNS, ports, TCP/UDP
 - [ ] SSH keys (how they work, generate them)
 - [ ] Firewalls (iptables basics, security groups)
 - [ ] curl, wget for API testing
