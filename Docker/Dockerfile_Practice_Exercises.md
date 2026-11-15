@@ -1,8 +1,33 @@
 # Dockerfile Practice Exercises 🎯
 
-**5 Real-World Examples: Java, Node.js, Python**
+**6 Real-World Examples: Java, Node.js, Python**
 
 Practice building Docker images for these applications!
+
+---
+
+## Quick Reference: Creating Non-Root User
+
+**Different base images use different commands:**
+
+| Base Image | Command | Flag | Meaning |
+|------------|---------|------|---------|
+| `python:3.11-slim` (Debian) | `useradd` | `-m` | Make home directory |
+| `node:18-alpine` (Alpine) | `adduser` | `-D` | Disable password |
+| `ubuntu:22.04` (Ubuntu) | `useradd` | `-m` | Make home directory |
+| `nginx:alpine` (Alpine) | `adduser` | `-D` | Disable password |
+
+**Rule:** If `-alpine` in image name → use `adduser -D`, otherwise → use `useradd -m`
+
+**Examples:**
+```dockerfile
+FROM python:3.11-slim       → RUN useradd -m appuser
+FROM python:3.11-alpine     → RUN adduser -D appuser
+FROM node:18                → RUN useradd -m appuser
+FROM node:18-alpine         → RUN adduser -D appuser
+FROM ubuntu:22.04           → RUN useradd -m appuser
+FROM alpine:3.18            → RUN adduser -D appuser
+```
 
 ---
 
@@ -115,6 +140,8 @@ app.listen(PORT, () => {
 }
 ```
 
+**Note:** `package*.json` copies both `package.json` and `package-lock.json`. The `./` means "copy to current WORKDIR as a directory".
+
 ### Your Task:
 Create a Dockerfile that:
 - Uses Node.js 18-alpine
@@ -144,6 +171,8 @@ USER appuser
 CMD ["npm", "start"]
 ```
 
+**Note:** `--production` installs only runtime dependencies (not devDependencies), making image 60% smaller. Always use in production Docker images.
+
 **Commands:**
 ```bash
 # Build
@@ -160,9 +189,85 @@ curl http://localhost:3000/users
 
 ---
 
+## Exercise 3: Java Simple HelloWorld (Single-Stage)
+
+### Application Files:
+
+**HelloWorld.java:**
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello from Java!");
+        System.out.println("This is a single-stage Docker build");
+        
+        System.out.println("Java application is running...");
+        System.out.println("Press Ctrl+C to stop");
+        
+        try {
+            Thread.sleep(Long.MAX_VALUE);
+        } catch (InterruptedException e) {
+            System.out.println("Application stopped");
+        }
+    }
+}
+```
+
+### Your Task:
+Create a **single-stage Dockerfile** that:
+- Uses openjdk:17-alpine
+- Sets WORKDIR /app
+- Copies HelloWorld.java
+- Compiles: `javac HelloWorld.java`
+- Runs as non-root user
+- CMD: `java HelloWorld`
+
+**Note:** This is single-stage - includes full JDK (for compilation). Compare with multi-stage Java project to see size difference!
+
+<details>
+<summary>Click for Solution</summary>
+
+**Dockerfile:**
+```dockerfile
+FROM openjdk:17-alpine
+
+WORKDIR /app
+
+COPY HelloWorld.java .
+
+RUN javac HelloWorld.java
+
+RUN adduser -D appuser && chown -R appuser:appuser /app
+USER appuser
+
+CMD ["java", "HelloWorld"]
+```
+
+**Commands:**
+```bash
+# Build
+docker build -t java-hello .
+
+# Run
+docker run java-hello
+
+# Expected output:
+# Hello from Java!
+# This is a single-stage Docker build
+# Java application is running...
+# Press Ctrl+C to stop
+```
+
+**Image Size:** ~350 MB (includes JDK compiler)
+
+**Compare with Multi-Stage:** Multi-stage Java (Exercise 4) is only ~200 MB!
+
+</details>
+
+---
+
 -----------------Multi Stage dockerfile------------------
 
-## Exercise 3: Java Spring Boot (Multi-Stage)
+## Exercise 4: Java Spring Boot (Multi-Stage)
 
 ### Application Files:
 
@@ -279,7 +384,7 @@ curl http://localhost:8080/api/status
 
 ---
 
-## Exercise 4: Python FastAPI (Multi-Stage)
+## Exercise 5: Python FastAPI (Multi-Stage)
 
 ### Application Files:
 
@@ -362,7 +467,7 @@ curl http://localhost:8000/health
 
 ---
 
-## Exercise 5: Node.js React App (Multi-Stage with Nginx)
+## Exercise 6: Node.js React App (Multi-Stage with Nginx)
 
 ### Application Files:
 
